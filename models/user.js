@@ -1,13 +1,11 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+// models/User.js
 
+const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    loginStreak: { type: Number, default: 0 },
-    lastLogin: { type: Date },
-    lastBonusReceived: { type: Date, default: null } // 最後にボーナスを受け取った日時
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  lastBonusReceived: { type: Date, default: null }
 });
 
 const User = mongoose.model('User', userSchema);

@@ -1,16 +1,34 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>ダッシュボード</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>ダッシュボードへようこそ！</h1>
-    <p>ログインボーナスを受け取るには、以下のボタンをクリックしてください。</p>
-    <button id="claim-bonus">ボーナスを受け取る</button>
+    <header>
+        <h1>ダッシュボードへようこそ！</h1>
+        <nav>
+            <button id="logout">ログアウト</button>
+        </nav>
+    </header>
+    <main>
+        <section id="bonus-section">
+            <h2>ログインボーナス</h2>
+            <p>ログインボーナスを受け取るには、以下のボタンをクリックしてください。</p>
+            <button id="claim-bonus">ボーナスを受け取る</button>
+            <p id="bonus-status"></p>
+        </section>
+        <section id="user-info">
+            <h2>ユーザー情報</h2>
+            <p id="username"></p>
+            <p id="last-login"></p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 ログインボーナスアプリ</p>
+    </footer>
     <script src="dashboard.js"></script>
 </body>
 </html>

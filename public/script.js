@@ -1,64 +1,60 @@
 // public/script.js
 
-document.getElementById('login-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
+// ログインフォームのイベントリスナー
+document.getElementById("login-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
+  const username = document.getElementById("login-username").value;
+  const password = document.getElementById("login-password").value;
 
-    const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
     });
 
     const data = await response.json();
-    if (response.ok) {
-        alert('ログイン完了!');
-        // トークンを保存するなど、次のステップに進む
-    } else {
-        alert(`Login failed: ${data.message}`);
+
+    if (!response.ok) {
+      throw new Error(data.message || "ログインに失敗しました");
     }
+
+    const token = data.token;
+    localStorage.setItem("token", token);
+    alert("ログイン完了！");
+    window.location.href = "/dashboard.html"; // ダッシュボードページへリダイレクト
+  } catch (err) {
+    console.error("ログイン中にエラーが発生しました:", err.message);
+    alert(`エラー: ${err.message}`);
+  }
 });
 
-document.getElementById('register-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
+// 登録フォームのイベントリスナー
+document.getElementById("register-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
 
-    const username = document.getElementById('register-username').value;
-    const password = document.getElementById('register-password').value;
+  const username = document.getElementById("register-username").value;
+  const password = document.getElementById("register-password").value;
 
-    const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+  try {
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
     });
 
     const data = await response.json();
-    if (response.ok) {
-        alert('Registration successful!');
-    } else {
-        alert(`Registration failed: ${data.message}`);
+
+    if (!response.ok) {
+      throw new Error(data.message || "登録に失敗しました");
     }
-});
-document.getElementById('login-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
 
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-
-    const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-        const token = data.token;
-        localStorage.setItem('token', token);
-        alert('ログイン完了！');
-        window.location.href = '/dashboard.html'; // ダッシュボードページへリダイレクト
-    } else {
-        alert(`Login failed: ${data.message}`);
-    }
+    alert("登録が完了しました！ログインしてください。");
+    // オプション: 登録成功後にログインフォームにフォーカスを移動
+    document.getElementById("login-username").focus();
+  } catch (err) {
+    console.error("登録中にエラーが発生しました:", err.message);
+    alert(`エラー: ${err.message}`);
+  }
 });
