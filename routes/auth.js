@@ -49,10 +49,46 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     });
 
+    // lastLogin を初期化または更新
+    user.lastLogin = user.lastLogin || new Date();
+    await user.save();
+
     res.json({ token });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// JWT検証用のミドルウェア
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
+
+// ユーザー情報を取得するエンドポイント
+router.get("/user-info", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    res.json({
+      username: user.username,
+      lastLogin: user.lastLogin ? user.lastLogin.toISOString() : null,
+    });
+  } catch (err) {
+    console.error("User info retrieval error:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました。" });
   }
 });
 

@@ -9,6 +9,7 @@ const path = require("path");
 const app = express();
 dotenv.config();
 app.use(express.json());
+app.use(express.static('public'));
 
 // MongoDB接続
 mongoose.connect(process.env.MONGO_URI, {
@@ -70,6 +71,45 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+
+app.get("/api/user-info", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    res.json({
+      username: user.username,
+      lastLogin: user.lastLogin,
+    });
+  } catch (err) {
+    console.error('User info retrieval error:', err);
+    res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+  }
+});
+
+app.get("/api/bonus-status", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    const now = new Date();
+    const resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0);
+    if (now < resetTime) {
+      resetTime.setDate(resetTime.getDate() - 1);
+    }
+
+    const bonusStatus = user.lastBonusReceived > resetTime ? 'ボーナスはすでに受け取られました' : 'ボーナスが受け取れます';
+
+    res.json({ status: bonusStatus });
+  } catch (err) {
+    console.error('Bonus status retrieval error:', err);
+    res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+  }
+});
 
 // 静的ファイルの提供
 app.use(express.static(path.join(__dirname, "public")));
