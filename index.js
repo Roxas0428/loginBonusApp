@@ -48,19 +48,50 @@ app.use("/api/auth", authRoutes);
 
 // ルート: ユーザー情報の取得
 app.get("/api/user-info", authenticateToken, async (req, res) => {
+  console.log("User info route hit");
+
   try {
     const user = await User.findById(req.user.userId).select("-password");
-    if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
+    if (!user) {
+      console.log("User not found");
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    // 連続ログイン日数の更新ロジック
+    const now = new Date();
+    const previousLogin = user.lastLogin;
+    if (previousLogin) {
+      const previousLoginDate = new Date(previousLogin);
+      const daysDifference = Math.floor((now - previousLoginDate) / (1000 * 60 * 60 * 24));
+
+      if (daysDifference === 1) {
+        user.consecutiveLoginDays += 1;
+      } else if (daysDifference > 1) {
+        user.consecutiveLoginDays = 1;
+      }
+    } else {
+      user.consecutiveLoginDays = 1; // 初回ログイン時
+    }
+
+    user.previousLogin = user.lastLogin;
+    user.lastLogin = now;
+    await user.save();
 
     res.json({
       username: user.username,
-      lastLogin: user.lastLogin,
+      consecutiveLoginDays: user.consecutiveLoginDays, // 連続ログイン日数を返す
+      previousLogin: user.previousLogin ? user.previousLogin.toISOString() : null,
+      lastLogin: user.lastLogin ? user.lastLogin.toISOString() : null,
+      points: user.points
     });
   } catch (err) {
     console.error('User info retrieval error:', err);
     res.status(500).json({ message: 'サーバーエラーが発生しました。' });
   }
 });
+
+
+
 
 // ルート: ボーナスステータスの取得
 app.get("/api/bonus-status", authenticateToken, async (req, res) => {
@@ -73,8 +104,8 @@ app.get("/api/bonus-status", authenticateToken, async (req, res) => {
     if (now < resetTime) resetTime.setDate(resetTime.getDate() - 1);
 
     const bonusStatus = user.lastBonusReceived > resetTime
-      ? 'ボーナスはすでに受け取られました'
-      : 'ボーナスが受け取れます';
+      ? '受け取り済みです'
+      : '受け取れます';
 
     res.json({ status: bonusStatus });
   } catch (err) {
@@ -90,7 +121,7 @@ app.post("/api/claim-bonus", authenticateToken, async (req, res) => {
     if (!user) return res.status(404).json({ message: "ユーザーが見つかりませんでした。" });
 
     const now = new Date();
-    const resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0);
+    const resetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0);
     if (now < resetTime) resetTime.setDate(resetTime.getDate() - 1);
 
     if (user.lastBonusReceived && user.lastBonusReceived > resetTime) {
@@ -100,7 +131,7 @@ app.post("/api/claim-bonus", authenticateToken, async (req, res) => {
     user.lastBonusReceived = now;
     await user.save();
 
-    res.json({ bonus: "100ポイントを受け取りました" });
+    res.json({ bonus: "ログインできてえらい！！" });
   } catch (err) {
     console.error('Claim bonus error:', err);
     res.status(500).json({ message: 'サーバーエラーが発生しました。' });

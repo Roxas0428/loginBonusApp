@@ -12,7 +12,7 @@ router.post("/register", async (req, res) => {
     // ユーザーが既に存在するか確認
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: "Username already exists" });
+      return res.status(400).json({ message: "既にユーザー名が登録されています" });
     }
 
     // パスワードのハッシュ化
@@ -20,7 +20,7 @@ router.post("/register", async (req, res) => {
     const newUser = new User({ username, password: hashedPassword });
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json({ message: "登録完了" });
   } catch (err) {
     console.error("User registration error:", err);
     res.status(500).json({ message: "Server error" });
@@ -32,29 +32,36 @@ router.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(400).json({ message: "Invalid username or password" });
+      return res.status(400).json({ message: "ユーザーが見つかりません" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid username or password" });
+      return res.status(400).json({ message: "パスワードが間違っています" });
     }
+
+    // 連続ログイン日数の更新
+    const now = new Date();
+    const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
+
+    if (user.lastLogin && (now - user.lastLogin) <= oneDayInMilliseconds) {
+      user.consecutiveLoginDays += 1;
+    } else {
+      user.consecutiveLoginDays = 1;
+    }
+
+    user.previousLogin = user.lastLogin;
+    user.lastLogin = now;
+    await user.save();
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    // 現在のログイン時間を previousLogin にコピー
-    user.previousLogin = user.lastLogin;
-
-    // lastLogin を現在の日時に更新
-    user.lastLogin = new Date();
-    await user.save();
-
     res.json({ token });
   } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("ログインエラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
 
@@ -76,19 +83,20 @@ function authenticateToken(req, res, next) {
 // ユーザー情報を取得するエンドポイント
 router.get("/user-info", authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select("-password");
+    const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({ message: "ユーザーが見つかりません" });
     }
 
     res.json({
       username: user.username,
-      previousLogin: user.previousLogin ? user.previousLogin.toISOString() : null,
-      lastLogin: user.lastLogin ? user.lastLogin.toISOString() : null,
+      consecutiveLoginDays: user.consecutiveLoginDays,
+      previousLogin: user.previousLogin,
+      points: user.points,
     });
   } catch (err) {
-    console.error('User info retrieval error:', err);
-    res.status(500).json({ message: 'サーバーエラーが発生しました。' });
+    console.error("ユーザー情報取得エラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
 

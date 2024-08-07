@@ -43,51 +43,51 @@ async function claimBonus() {
     alert(`エラー: ${err.message}`);
   }
 }
-
+// loadUserInfo 関数内の連続ログイン日数の表示部分を修正します。
 async function loadUserInfo() {
-  const token = localStorage.getItem("token");
-  try {
-    const response = await fetch("/api/auth/user-info", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("ユーザー情報の取得に失敗しました");
-    }
-
-    const data = await response.json();
-
-    // previousLoginが存在するか確認
-    if (data.previousLogin) {
-      const previousLoginDate = new Date(data.previousLogin);
-
-      if (!isNaN(previousLoginDate.getTime())) {
-        document.getElementById(
-          "last-login"
-        ).textContent = `前回のログイン: ${previousLoginDate.toLocaleString()}`;
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch("/api/auth/user-info", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("ユーザー情報の取得に失敗しました");
+      }
+  
+      const data = await response.json();
+  
+      document.getElementById("username").textContent = `ユーザー名: ${data.username}`;
+      document.getElementById("points").textContent = `連続ログイン日数: ${data.consecutiveLoginDays}`; // 連続ログイン日数を表示
+      document.getElementById("welcome-message").textContent = `${data.username}さん、ようこそ！`;
+  
+      if (data.previousLogin) {
+        const previousLoginDate = new Date(data.previousLogin);
+  
+        if (!isNaN(previousLoginDate.getTime())) {
+          document.getElementById(
+            "last-login"
+          ).textContent = `前回のログイン: ${previousLoginDate.toLocaleString()}`;
+        } else {
+          document.getElementById(
+            "last-login"
+          ).textContent = `前回のログイン: データが無効です`;
+        }
       } else {
         document.getElementById(
           "last-login"
-        ).textContent = `前回のログイン: データが無効です`;
+        ).textContent = `初めてのログインおめでとうございます！`;
       }
-    } else {
-      // 初めてのログインなどで前回のログイン時間がない場合
-      document.getElementById(
-        "last-login"
-      ).textContent = `初めてのログインおめでとうございます！`;
+  
+    } catch (err) {
+      console.error("ユーザー情報の取得中にエラーが発生しました:", err.message);
+      alert(`エラー: ${err.message}`);
     }
-
-    document.getElementById(
-      "username"
-    ).textContent = `ユーザー名: ${data.username}`;
-  } catch (err) {
-    console.error("ユーザー情報の取得中にエラーが発生しました:", err.message);
-    alert(`エラー: ${err.message}`);
   }
-}
-
+  
+  
 async function checkBonusStatus() {
   const token = localStorage.getItem("token");
   try {
@@ -104,7 +104,7 @@ async function checkBonusStatus() {
     const data = await response.json();
     document.getElementById(
       "bonus-status"
-    ).textContent = `ボーナスステータス: ${data.status}`;
+    ).textContent = `本日のログボ: ${data.status}`;
   } catch (err) {
     console.error(
       "ボーナスステータスの取得中にエラーが発生しました:",

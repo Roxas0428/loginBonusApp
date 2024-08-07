@@ -1,37 +1,43 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ダッシュボード</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
-    <link rel="stylesheet" href="dashboard.css">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+    />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
     <header>
-        <h1>ダッシュボードへようこそ！</h1>
-        <nav>
-
-        </nav>
+      <h1>ログインおめでとう！！</h1>
+      <nav></nav>
     </header>
     <main>
-        <section id="bonus-section">
-            <h2>ログインボーナス</h2>
-            <p>ログインボーナスを受け取るには、以下のボタンをクリックしてください。</p>
-            <button id="claim-bonus">ボーナスを受け取る</button>
-            <p id="bonus-status"></p>
-        </section>
-        <section id="user-info">
-            <h2>ユーザー情報</h2>
-            <p id="username"></p>
-            <p id="last-login"></p>
-            <button id="logout">ログアウト</button>
-        </section>
+      <section id="bonus-section">
+        <h2>ログインボーナス</h2>
+        <p>
+          ログインボーナスを受け取るには、以下のボタンをクリックしてください。
+        </p>
+        <button id="claim-bonus">ボーナスを受け取る</button>
+        <p id="bonus-status"></p>
+      </section>
+      <section id="user-info">
+        <h2>ユーザー情報</h2>
+        <p id="username"></p>
+        <p id="welcome-message"></p>
+        <p id="points"></p> <!-- ポイント表示用の要素 -->
+        <p id="last-login"></p>
+        <button id="logout">ログアウト</button>
+      </section>
     </main>
 
     <footer>
-        <p>&copy; 2024 ログインボーナスアプリ</p>
+      <p>&copy; 2024 ログインボーナスアプリ</p>
+      <p><a href="contact.html">お問い合わせ</a></p>
     </footer>
     <script src="dashboard.js"></script>
-</body>
+  </body>
 </html>
