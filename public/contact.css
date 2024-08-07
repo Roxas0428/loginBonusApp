@@ -1,0 +1,94 @@
+/* ベーススタイルのリセット */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+header {
+  background-color: #4a90e2;
+  color: #fff;
+  padding: 20px 0;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+body {
+  font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+  background-color: #f7f8fa;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* お問い合わせセクションのスタイル */
+.contact {
+  background-color: #fff;
+  padding: 40px 20px;
+  margin: 40px auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  text-align: center;
+}
+
+.contact h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #4a90e2;
+}
+
+.contact p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #666;
+}
+
+/* フォームスタイル */
+.contact form div {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.contact label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+.contact input[type="text"],
+.contact input[type="email"],
+.contact textarea {
+  width: calc(100% - 20px);
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.contact textarea {
+  height: 100px;
+  resize: vertical;
+}
+
+.contact button[type="submit"] {
+  padding: 15px 30px;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease,
+    box-shadow 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.contact button[type="submit"]:hover {
+  background: linear-gradient(135deg, #5a0a9d 0%, #1f65d1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

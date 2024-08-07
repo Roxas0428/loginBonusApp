@@ -1,60 +1,65 @@
-// public/script.js
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("login-form");
+  const registerForm = document.getElementById("register-form");
 
-// ログインフォームのイベントリスナー
-document.getElementById("login-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
+  if (loginForm) {
+      loginForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
 
-  const username = document.getElementById("login-username").value;
-  const password = document.getElementById("login-password").value;
+          const username = document.getElementById("login-username").value;
+          const password = document.getElementById("login-password").value;
 
-  try {
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+          try {
+              const response = await fetch("/api/auth/login", {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ username, password }),
+              });
 
-    const data = await response.json();
+              if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(errorData.message || "ログインに失敗しました");
+              }
 
-    if (!response.ok) {
-      throw new Error(data.message || "ログインに失敗しました");
-    }
-
-    const token = data.token;
-    localStorage.setItem("token", token);
-    alert("ログイン完了！");
-    window.location.href = "/dashboard.html"; // ダッシュボードページへリダイレクト
-  } catch (err) {
-    console.error("ログイン中にエラーが発生しました:", err.message);
-    alert(`エラー: ${err.message}`);
+              const data = await response.json();
+              localStorage.setItem("token", data.token);
+              window.location.href = "dashboard.html"; // ログイン成功後、ダッシュボードへ遷移
+          } catch (err) {
+              console.error("Login error:", err.message);
+              alert(`エラー: ${err.message}`);
+          }
+      });
   }
-});
 
-// 登録フォームのイベントリスナー
-document.getElementById("register-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
+  if (registerForm) {
+      registerForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
 
-  const username = document.getElementById("register-username").value;
-  const password = document.getElementById("register-password").value;
+          const username = document.getElementById("register-username").value;
+          const password = document.getElementById("register-password").value;
 
-  try {
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+          try {
+              const response = await fetch("/api/auth/register", {
+                  method: "POST",
+                  headers: {
+                      "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ username, password }),
+              });
 
-    const data = await response.json();
+              if (!response.ok) {
+                  const errorData = await response.json();
+                  throw new Error(errorData.message || "新規登録に失敗しました");
+              }
 
-    if (!response.ok) {
-      throw new Error(data.message || "登録に失敗しました");
-    }
-
-    alert("登録が完了しました！ログインしてください。");
-    // オプション: 登録成功後にログインフォームにフォーカスを移動
-    document.getElementById("login-username").focus();
-  } catch (err) {
-    console.error("登録中にエラーが発生しました:", err.message);
-    alert(`エラー: ${err.message}`);
+              alert("登録が完了しました。ログインしてください。");
+              window.location.href = "login.html"; // 登録成功後、ログインページへ遷移
+          } catch (err) {
+              console.error("Register error:", err.message);
+              alert(`エラー: ${err.message}`);
+          }
+      });
   }
 });

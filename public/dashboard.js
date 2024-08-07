@@ -45,35 +45,48 @@ async function claimBonus() {
 }
 
 async function loadUserInfo() {
-    const token = localStorage.getItem("token");
-    try {
-        const response = await fetch("/api/auth/user-info", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+  const token = localStorage.getItem("token");
+  try {
+    const response = await fetch("/api/auth/user-info", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        if (!response.ok) {
-            throw new Error("ユーザー情報の取得に失敗しました");
-        }
-
-        const data = await response.json();
-        console.log("Received User Data:", data); // デバッグ用のログ
-
-        const lastLoginDate = new Date(data.lastLogin);
-
-        if (!isNaN(lastLoginDate)) { // 日付が有効な場合のみ表示
-            document.getElementById("last-login").textContent = `前回のログイン: ${lastLoginDate.toLocaleString()}`;
-        } else {
-            document.getElementById("last-login").textContent = `前回のログイン: データが無効です`;
-        }
-        document.getElementById("username").textContent = `ユーザー名: ${data.username}`;
-    } catch (err) {
-        console.error("ユーザー情報の取得中にエラーが発生しました:", err.message);
-        alert(`エラー: ${err.message}`);
+    if (!response.ok) {
+      throw new Error("ユーザー情報の取得に失敗しました");
     }
-}
 
+    const data = await response.json();
+
+    // previousLoginが存在するか確認
+    if (data.previousLogin) {
+      const previousLoginDate = new Date(data.previousLogin);
+
+      if (!isNaN(previousLoginDate.getTime())) {
+        document.getElementById(
+          "last-login"
+        ).textContent = `前回のログイン: ${previousLoginDate.toLocaleString()}`;
+      } else {
+        document.getElementById(
+          "last-login"
+        ).textContent = `前回のログイン: データが無効です`;
+      }
+    } else {
+      // 初めてのログインなどで前回のログイン時間がない場合
+      document.getElementById(
+        "last-login"
+      ).textContent = `初めてのログインおめでとうございます！`;
+    }
+
+    document.getElementById(
+      "username"
+    ).textContent = `ユーザー名: ${data.username}`;
+  } catch (err) {
+    console.error("ユーザー情報の取得中にエラーが発生しました:", err.message);
+    alert(`エラー: ${err.message}`);
+  }
+}
 
 async function checkBonusStatus() {
   const token = localStorage.getItem("token");
@@ -103,5 +116,5 @@ async function checkBonusStatus() {
 
 function logout() {
   localStorage.removeItem("token");
-  window.location.href = "/index.html";
+  window.location.href = "/home.html";
 }

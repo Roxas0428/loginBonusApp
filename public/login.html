@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ログイン</title>
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <header>
+    <h1>ログイン</h1>
+    <nav>
+      <!-- Optional: Navigation buttons or links -->
+    </nav>
+  </header>
+  <main class="main-container">
+    <div class="form-container">
+      <h2>ログイン</h2>
+      <form id="login-form">
+        <div>
+          <label for="login-username">ユーザー名</label>
+          <input type="text" id="login-username" name="username" required />
+        </div>
+        <div>
+          <label for="login-password">パスワード</label>
+          <input type="password" id="login-password" name="password" required />
+        </div>
+        <button type="submit" class="button">ログイン</button>
+        <p>
+          アカウントをお持ちでない方は、<a href="register.html">こちら</a>から新規登録してください。
+        </p>
+        <a href="/home.html" class="button">Homeに戻る</a>
+      </form>
+    </div>
+  </main>
+  <footer>
+    <p>&copy; 2024 ログインボーナスアプリ</p>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>
