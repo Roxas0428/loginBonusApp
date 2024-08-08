@@ -12,7 +12,9 @@ router.post("/register", async (req, res) => {
     // ユーザーが既に存在するか確認
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: "既にユーザー名が登録されています" });
+      return res
+        .status(400)
+        .json({ message: "既にユーザー名が登録されています" });
     }
 
     // パスワードのハッシュ化
@@ -23,9 +25,11 @@ router.post("/register", async (req, res) => {
     res.status(201).json({ message: "登録完了" });
   } catch (err) {
     console.error("User registration error:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
+
+// ログインエンドポイント
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -44,8 +48,17 @@ router.post("/login", async (req, res) => {
     const now = new Date();
     const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
 
-    if (user.lastLogin && (now - user.lastLogin) <= oneDayInMilliseconds) {
-      user.consecutiveLoginDays += 1;
+    if (user.lastLogin) {
+      const lastLoginDate = new Date(user.lastLogin);
+      const daysDifference = Math.floor(
+        (now - lastLoginDate) / oneDayInMilliseconds
+      );
+
+      if (daysDifference === 1) {
+        user.consecutiveLoginDays += 1;
+      } else if (daysDifference > 1) {
+        user.consecutiveLoginDays = 1;
+      }
     } else {
       user.consecutiveLoginDays = 1;
     }
@@ -58,19 +71,21 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.json({ token });
+    res.json({
+      token,
+      username: user.username,
+      consecutiveLoginDays: user.consecutiveLoginDays,
+    });
   } catch (err) {
     console.error("ログインエラー:", err);
     res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
 
-
 // JWT検証用のミドルウェア
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
-
   if (!token) return res.sendStatus(401);
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
@@ -80,25 +95,5 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// ユーザー情報を取得するエンドポイント
-router.get("/user-info", authenticateToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId);
-    if (!user) {
-      return res.status(404).json({ message: "ユーザーが見つかりません" });
-    }
-
-    res.json({
-      username: user.username,
-      consecutiveLoginDays: user.consecutiveLoginDays,
-      previousLogin: user.previousLogin,
-      points: user.points,
-    });
-  } catch (err) {
-    console.error("ユーザー情報取得エラー:", err);
-    res.status(500).json({ message: "サーバーエラーが発生しました" });
-  }
-});
-
-
+// 認証ミドルウェアのエクスポート
 module.exports = router;
