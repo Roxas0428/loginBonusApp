@@ -4,36 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="contact.css" />
-    <title>Document</title>
+    <title>お問い合わせ</title>
   </head>
   <body>
     <header>
-        <h1>お問い合わせ</h1>
-        <nav>
-
-        </nav>
+      <h1>お問い合わせ</h1>
+      <nav></nav>
     </header>
     <section class="contact">
-      <h2>お問い合わせ</h2>
+      <h2>コメントを残す</h2>
       <p>
-        ご質問やフィードバックがありましたら、以下のフォームからご連絡ください。
+        ご質問やフィードバックがありましたら、以下のフォームからコメントを残してください。皆さんでログイン結果を共有していただいても構いません。
       </p>
-      <form action="/send-message" method="POST">
+      <form id="comment-form">
         <div>
-          <label for="name">名前:</label>
-          <input type="text" id="name" name="name" required />
-        </div>
-        <div>
-          <label for="email">メールアドレス:</label>
-          <input type="email" id="email" name="email" required />
-        </div>
-        <div>
-          <label for="message">メッセージ:</label>
-          <textarea id="message" name="message" required></textarea>
+          <label for="comment">コメント:</label>
+          <textarea id="comment" name="comment" required></textarea>
         </div>
         <button type="submit">送信</button>
       </form>
+      <div id="comments-section">
+        <h3>コメント一覧</h3>
+        <ul id="comments-list">
+          <!-- コメントがここに追加される -->
+        </ul>
+      </div>
       <a href="/home.html" class="button">Homeに戻る</a>
     </section>
+
+    <script src="comments.js"></script>
   </body>
 </html>

@@ -9,6 +9,10 @@
       href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
     />
     <link rel="stylesheet" href="dashboard.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/modaal@0.4.4/dist/css/modaal.min.css"
+    />
   </head>
   <body>
     <header>
@@ -21,14 +25,18 @@
         <p>
           ログインボーナスを受け取るには、以下のボタンをクリックしてください。
         </p>
-        <button id="claim-bonus">ボーナスを受け取る</button>
+
+        <!-- ボーナスを受け取るボタンをモーダルリンクに変更 -->
+        <a class="modaal-inline" href="#inline_1" id="claim-bonus">ボーナスを受け取る</a>
         <p id="bonus-status"></p>
       </section>
+
       <section id="user-info">
         <h2>ユーザー情報</h2>
         <p id="username"></p>
         <p id="welcome-message"></p>
-        <p id="points"></p> <!-- ポイント表示用の要素 -->
+        <p id="points"></p>
+        <!-- ポイント表示用の要素 -->
         <p id="last-login"></p>
         <button id="logout">ログアウト</button>
       </section>
@@ -38,6 +46,27 @@
       <p>&copy; 2024 ログインボーナスアプリ</p>
       <p><a href="contact.html">お問い合わせ</a></p>
     </footer>
+
+    <!-- モーダルの内容 -->
+    <div class="none" id="inline_1">
+      <p>ボタン押してくれてありがとう！！</p>
+    </div>
+
+    <!-- スクリプトの読み込み -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/modaal@0.4.4/dist/js/modaal.min.js"></script>
     <script src="dashboard.js"></script>
+
+    <!-- モーダルの初期化とリダイレクト処理 -->
+    <script>
+      $(document).ready(function () {
+        $(".modaal-inline").modaal({
+          after_close: function() {
+            // モーダルが閉じた後にリダイレクト
+            window.location.reload(); // ページをリロード
+          }
+        });
+      });
+    </script>
   </body>
 </html>

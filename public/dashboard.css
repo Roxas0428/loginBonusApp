@@ -6,7 +6,7 @@
 }
 
 body {
-  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
   background-color: #f7f8fa;
   color: #333;
   line-height: 1.6;
@@ -37,7 +37,8 @@ nav button {
   font-size: 1rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease,
+    box-shadow 0.3s ease;
 }
 
 nav button:hover {
@@ -97,7 +98,8 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease,
+    box-shadow 0.3s ease;
 }
 
 button:hover {
@@ -115,6 +117,46 @@ footer {
   margin-top: 50px;
   width: 100%;
 }
+
 footer a {
   color: white;
+}
+
+/* モーダルリンクのスタイル */
+.modaal-inline {
+  display: inline-block;
+  padding: 15px 30px;
+  font-size: 1rem;
+  color: #fff;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+  text-decoration: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.modaal-inline:hover {
+  background: linear-gradient(135deg, #5a0a9d 0%, #1f65d1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* モーダルのスタイル */
+.modaal-overlay {
+  background-color: rgba(0, 0, 0, 0.7); /* 半透明の黒、ここで透明度を調整 */
+}
+
+.modaal-modal {
+  background-color: rgba(255, 255, 255, 0.1); /* 半透明の白 */
+  border: none;
+  box-shadow: none;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.modaal-close {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 50%;
 }

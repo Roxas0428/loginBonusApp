@@ -19,8 +19,8 @@ h1{
         font-family: 'STIXGeneral', serif; /* 数学記号フォント */
         font-size: 3em;
         font-weight: bold;
-        color: #000;
         font-style: italic;
+        text-decoration: underline;
     
 }
 h1 span{
