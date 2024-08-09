@@ -219,3 +219,8 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`サーバー接続開始 ${PORT}`);
 });
+
+
+process.env.MONGO_URI;
+process.env.JWT_SECRET;
+process.env.PORT;
