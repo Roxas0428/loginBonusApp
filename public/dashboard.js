@@ -1,72 +1,71 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("ログインが必要です");
-      window.location.href = "/index.html";
-      return;
-    }
-  
-    $(document).ready(function () {
-        $(".modaal-inline").modaal();
-      });
-      
-      
-    
-    const claimBonusButton = document.getElementById("claim-bonus");
-    const bonusStatusElement = document.getElementById("bonus-status");
-    const usernameElement = document.getElementById("username");
-    const lastLoginElement = document.getElementById("last-login");
-    const logoutButton = document.getElementById("logout");
-  
-    if (claimBonusButton) claimBonusButton.addEventListener("click", claimBonus);
-    if (logoutButton) logoutButton.addEventListener("click", logout);
-  
-    loadUserInfo();
-    checkBonusStatus();
-  });
-  
-  async function claimBonus() {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch("/api/claim-bonus", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage;
-        try {
-          const errorData = JSON.parse(errorText);
-          errorMessage = errorData.message || "ボーナスの受け取りに失敗しました";
-        } catch {
-          errorMessage = "ボーナスの受け取りに失敗しました";
-        }
-        throw new Error(errorMessage);
-      }
-  
-      const data = await response.json();
-  
-      // モーダルにメッセージを設定して開く
-      const modalContent = document.getElementById("inline_1");
-      modalContent.innerHTML = `<p>${data.message || "ボーナスを受け取りました！"}</p>`;
-      $(".modaal-inline").modaal("open");
-      
-      
-      checkBonusStatus();
-    } catch (err) {
-      console.error("Claim bonus error:", err.message);
-      
-      // エラーメッセージをモーダルで表示
-      document.getElementById("inline_1").innerHTML = `<p>エラー: ${err.message}</p>`;
-      $(".modaal-inline").modaal("open");
-    }
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("ログインが必要です");
+    window.location.href = "/index.html";
+    return;
   }
-  
 
+  $(document).ready(function () {
+    $(".modaal-inline").modaal();
+  });
+
+  const claimBonusButton = document.getElementById("claim-bonus");
+  const bonusStatusElement = document.getElementById("bonus-status");
+  const usernameElement = document.getElementById("username");
+  const lastLoginElement = document.getElementById("last-login");
+  const logoutButton = document.getElementById("logout");
+
+  if (claimBonusButton) claimBonusButton.addEventListener("click", claimBonus);
+  if (logoutButton) logoutButton.addEventListener("click", logout);
+
+  loadUserInfo();
+  checkBonusStatus();
+});
+
+async function claimBonus() {
+  const token = localStorage.getItem("token");
+  try {
+    const response = await fetch("/api/claim-bonus", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.message || "ボーナスの受け取りに失敗しました";
+      } catch {
+        errorMessage = "ボーナスの受け取りに失敗しました";
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    // モーダルにメッセージを設定して開く
+    const modalContent = document.getElementById("inline_1");
+    modalContent.innerHTML = `<p>${
+      data.message || "ボーナスを受け取りました！"
+    }</p>`;
+    $(".modaal-inline").modaal("open");
+
+    checkBonusStatus();
+  } catch (err) {
+    console.error("Claim bonus error:", err.message);
+
+    // エラーメッセージをモーダルで表示
+    document.getElementById(
+      "inline_1"
+    ).innerHTML = `<p>エラー: ${err.message}</p>`;
+    $(".modaal-inline").modaal("open");
+  }
+}
 async function loadUserInfo() {
   const token = localStorage.getItem("token");
   if (!token) {

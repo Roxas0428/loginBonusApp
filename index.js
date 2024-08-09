@@ -1,17 +1,25 @@
+// 必要なモジュールのインポート
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const jwt = require("jsonwebtoken");
 const path = require("path");
+const bodyParser = require("body-parser");
 
 const authRoutes = require("./routes/auth");
 const User = require("./models/User");
 
+// 環境変数の設定
 dotenv.config();
 
+// Expressアプリケーションの初期化
 const app = express();
+
+// ミドルウェアの設定
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // MongoDB接続
 mongoose
@@ -22,7 +30,7 @@ mongoose
   .then(() => console.log("MongoDB接続完了"))
   .catch((err) => console.error("MongoDB接続エラー:", err));
 
-// ミドルウェア: JWT検証
+// JWT検証ミドルウェア
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -35,7 +43,7 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// ルート: ホームページのリダイレクト
+// ホームページリダイレクトルート
 app.get("/", (req, res) => {
   res.redirect("/home");
 });
@@ -47,40 +55,50 @@ app.get("/home", (req, res) => {
 // 認証ルート
 app.use("/api/auth", authRoutes);
 
-// ルート: ユーザー情報の取得
+// ユーザー情報取得ルート
 app.get("/api/user-info", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
-    if (!user) {
+    if (!user)
       return res.status(404).json({ message: "ユーザーが見つかりません" });
-    }
 
-    // 連続ログイン日数の更新ロジック
+    // console.log("Before update:", {
+    //   lastLogin: user.lastLogin,
+    //   previousLogin: user.previousLogin,
+    //   consecutiveLoginDays: user.consecutiveLoginDays,
+    // });
+
     const now = new Date();
-    const previousLogin = user.lastLogin;
+    const lastLoginDate = user.lastLogin ? new Date(user.lastLogin) : null;
 
-    if (previousLogin) {
-      const previousLoginDate = new Date(previousLogin);
-      const daysDifference = Math.floor(
-        (now - previousLoginDate) / (1000 * 60 * 60 * 24)
-      );
-
-      if (daysDifference === 1) {
-        // 1日だけ間隔が空いている場合は連続ログイン日数を増やす
-        user.consecutiveLoginDays += 1;
-      } else if (daysDifference > 1) {
-        // 1日以上間隔が空いている場合は連続ログイン日数をリセットする
+    // 最後のログインから24時間以上経過している場合のみ更新
+    if (!lastLoginDate || now - lastLoginDate >= 24 * 60 * 60 * 1000) {
+      // 連続ログイン日数の更新
+      if (lastLoginDate) {
+        const daysDifference = Math.floor(
+          (now - lastLoginDate) / (1000 * 60 * 60 * 24)
+        );
+        if (daysDifference === 1) {
+          user.consecutiveLoginDays += 1;
+        } else if (daysDifference > 1) {
+          user.consecutiveLoginDays = 1;
+        }
+      } else {
         user.consecutiveLoginDays = 1;
       }
-    } else {
-      // 初回ログイン時の処理
-      user.consecutiveLoginDays = 1;
-    }
 
-    // ログイン日時の更新
-    user.previousLogin = user.lastLogin;
-    user.lastLogin = now;
-    await user.save();
+      // 前回のログイン時間を保存し、現在のログイン時間を更新
+      user.previousLogin = user.lastLogin;
+      user.lastLogin = now;
+
+      await user.save();
+
+      // console.log("After update:", {
+      //   lastLogin: user.lastLogin,
+      //   previousLogin: user.previousLogin,
+      //   consecutiveLoginDays: user.consecutiveLoginDays,
+      // });
+    }
 
     res.json({
       username: user.username,
@@ -88,7 +106,7 @@ app.get("/api/user-info", authenticateToken, async (req, res) => {
       previousLogin: user.previousLogin
         ? user.previousLogin.toISOString()
         : null,
-      lastLogin: user.lastLogin ? user.lastLogin.toISOString() : null,
+      lastLogin: user.lastLogin.toISOString(),
       points: user.points,
     });
   } catch (err) {
@@ -96,8 +114,7 @@ app.get("/api/user-info", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "サーバーエラーが発生しました。" });
   }
 });
-
-// ルート: ボーナスステータスの取得
+// ボーナスステータス取得ルート
 app.get("/api/bonus-status", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
@@ -117,7 +134,6 @@ app.get("/api/bonus-status", authenticateToken, async (req, res) => {
 
     const bonusStatus =
       user.lastBonusReceived > resetTime ? "受け取り済みです" : "受け取れます";
-
     res.json({ status: bonusStatus });
   } catch (err) {
     console.error("Bonus status retrieval error:", err);
@@ -125,7 +141,7 @@ app.get("/api/bonus-status", authenticateToken, async (req, res) => {
   }
 });
 
-// ルート: ボーナス受け取り
+// ボーナス受け取りルート
 app.post("/api/claim-bonus", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
@@ -144,14 +160,17 @@ app.post("/api/claim-bonus", authenticateToken, async (req, res) => {
     if (now < resetTime) resetTime.setDate(resetTime.getDate() - 1);
 
     if (user.lastBonusReceived && user.lastBonusReceived > resetTime) {
-      return res.status(400).json({ message: "だがしかしボーナスは1日1回までなのでまた明日ログインしてな！！" });
+      return res
+        .status(400)
+        .json({
+          message:
+            "だがしかしボーナスは1日1回までなのでまた明日ログインしてな！！",
+        });
     }
 
-    // ボーナス受け取り処理
     user.lastBonusReceived = now;
     await user.save();
 
-    // ランダムで褒めるメッセージを作成
     const praises = [
       "普通の人が食べるのは食事だけですが、あなたが毎日ログインするのは「生きる力」です！",
       "あなたがログインする様子は、宇宙の法則をも超えた奇跡のようです！",
@@ -207,6 +226,39 @@ app.post("/api/claim-bonus", authenticateToken, async (req, res) => {
     console.error("Claim bonus error:", err);
     res.status(500).json({ message: "サーバーエラーが発生しました。" });
   }
+});
+
+// コメント機能用のスキーマとルート
+const commentSchema = new mongoose.Schema({ text: String });
+const Comment = mongoose.model("Comment", commentSchema);
+
+// コメント取得ルート
+app.get("/comments", async (req, res) => {
+  const comments = await Comment.find();
+  res.json(comments);
+});
+
+// コメント追加ルート
+app.post("/comments", async (req, res) => {
+  const newComment = new Comment({ text: req.body.comment });
+  await newComment.save();
+  res.json(newComment);
+});
+
+// コメント削除ルート
+app.delete("/comments/:id", async (req, res) => {
+  await Comment.findByIdAndDelete(req.params.id);
+  res.sendStatus(204);
+});
+
+// コメント更新ルート
+app.put("/comments/:id", async (req, res) => {
+  const updatedComment = await Comment.findByIdAndUpdate(
+    req.params.id,
+    { text: req.body.comment },
+    { new: true }
+  );
+  res.json(updatedComment);
 });
 
 // サーバー起動
