@@ -1,24 +1,27 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../models/user");
 const router = express.Router();
 
-// ユーザー登録エンドポイント
 // ユーザー登録エンドポイント
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
 
   // パスワードのバリデーション
   if (password.length < 6) {
-    return res.status(400).json({ message: "パスワードは6文字以上でなければなりません" });
+    return res
+      .status(400)
+      .json({ message: "パスワードは6文字以上でなければなりません" });
   }
 
   try {
     // ユーザーが既に存在するか確認
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).json({ message: "既にユーザー名が登録されています" });
+      return res
+        .status(400)
+        .json({ message: "既にユーザー名が登録されています" });
     }
 
     // パスワードのハッシュ化
@@ -32,7 +35,6 @@ router.post("/register", async (req, res) => {
     res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
-
 
 // ログインエンドポイント
 router.post("/login", async (req, res) => {
