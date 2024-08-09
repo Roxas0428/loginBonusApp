@@ -108,3 +108,7 @@ footer {
 footer a {
   color: white;
 }
+
+small {
+  margin: 1rem;
+}
