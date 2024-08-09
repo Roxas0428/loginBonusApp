@@ -27,7 +27,9 @@
         </p>
 
         <!-- ボーナスを受け取るボタンをモーダルリンクに変更 -->
-        <a class="modaal-inline" href="#inline_1" id="claim-bonus">ボーナスを受け取る</a>
+        <a class="modaal-inline" href="#inline_1" id="claim-bonus"
+          >ボーナスを受け取る</a
+        >
         <p id="bonus-status"></p>
       </section>
 
@@ -48,9 +50,7 @@
     </footer>
 
     <!-- モーダルの内容 -->
-    <div class="none" id="inline_1">
-      <p>ボタン押してくれてありがとう！！</p>
-    </div>
+    <div class="none" id="inline_1"></div>
 
     <!-- スクリプトの読み込み -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -61,10 +61,10 @@
     <script>
       $(document).ready(function () {
         $(".modaal-inline").modaal({
-          after_close: function() {
+          after_close: function () {
             // モーダルが閉じた後にリダイレクト
             window.location.reload(); // ページをリロード
-          }
+          },
         });
       });
     </script>

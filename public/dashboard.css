@@ -160,3 +160,6 @@ footer a {
   background-color: rgba(0, 0, 0, 0.3);
   border-radius: 50%;
 }
+.modaal-content-container p{
+  font-size: 1.5rem;
+}
