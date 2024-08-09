@@ -7,7 +7,7 @@ const path = require("path");
 const bodyParser = require("body-parser");
 
 const authRoutes = require("./routes/auth");
-const User = require("./models/User");
+const User = require("./models/user");
 
 // 環境変数の設定
 dotenv.config();
