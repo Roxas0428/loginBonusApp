@@ -17,6 +17,7 @@ const app = express();
 
 // ミドルウェアの設定
 app.use(express.json());
+app.use('/auth', authRoutes); // 認証ルートを適用
 app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -41,6 +42,8 @@ function authenticateToken(req, res, next) {
     req.user = user;
     next();
   });
+  
+  
 }
 
 // ホームページリダイレクトルート
@@ -182,44 +185,96 @@ app.post("/api/claim-bonus", authenticateToken, async (req, res) => {
 });
 
 // コメント機能用のスキーマとルート
-const commentSchema = new mongoose.Schema({ text: String });
+const commentSchema = new mongoose.Schema({
+  text: String,
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  username: String // ユーザー名を保存
+}, { timestamps: true });
+
 const Comment = mongoose.model("Comment", commentSchema);
 
 // コメント取得ルート
-app.get("/comments", async (req, res) => {
-  const comments = await Comment.find();
-  res.json(comments);
+// コメント取得ルート
+app.get('/comments', async (req, res) => {
+  try {
+    const comments = await Comment.find().sort({ createdAt: -1 });
+    res.json(comments);
+  } catch (err) {
+    console.error("コメント取得エラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
 });
 
 // コメント追加ルート
-app.post("/comments", async (req, res) => {
-  const newComment = new Comment({ text: req.body.comment });
-  await newComment.save();
-  res.json(newComment);
+app.post('/comments', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    const newComment = new Comment({
+      user: user._id,
+      username: user.username,
+      text: req.body.comment
+    });
+    
+    await newComment.save();
+    res.status(201).json(newComment);
+  } catch (err) {
+    console.error("コメント追加エラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
+// コメント編集ルート
+app.put('/comments/:id', authenticateToken, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) {
+      return res.status(404).json({ message: "コメントが見つかりません" });
+    }
+
+    if (comment.user.toString() !== req.user.userId && req.user.username !== "鈴木大地") {
+      return res.status(403).json({ message: "このコメントを編集する権限がありません" });
+    }
+
+    comment.text = req.body.comment;
+    await comment.save();
+    res.json(comment);
+  } catch (err) {
+    console.error("コメント編集エラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
 });
 
 // コメント削除ルート
-app.delete("/comments/:id", async (req, res) => {
-  await Comment.findByIdAndDelete(req.params.id);
-  res.sendStatus(204);
+app.delete('/comments/:id', authenticateToken, async (req, res) => {
+  try {
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) {
+      return res.status(404).json({ message: "コメントが見つかりません" });
+    }
+
+    // コメントの所有者とログインユーザーのIDを比較
+    if (comment.user.toString() !== req.user.userId && req.user.username !== "鈴木大地") {
+      return res.status(403).json({ message: "このコメントを削除する権限がありません" });
+    }
+
+    await comment.deleteOne();
+    res.status(204).send();
+  } catch (err) {
+    console.error("コメント削除エラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました。" });
+  }
 });
 
-// コメント更新ルート
-app.put("/comments/:id", async (req, res) => {
-  const updatedComment = await Comment.findByIdAndUpdate(
-    req.params.id,
-    { text: req.body.comment },
-    { new: true }
-  );
-  res.json(updatedComment);
-});
 
 // サーバー起動
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`サーバー接続開始 ${PORT}`);
 });
-
 
 process.env.MONGO_URI;
 process.env.JWT_SECRET;

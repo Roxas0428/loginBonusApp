@@ -74,9 +74,13 @@ router.post("/login", async (req, res) => {
     user.lastLogin = now;
     await user.save();
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     res.json({
       token,
@@ -89,16 +93,29 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// JWT検証用のミドルウェア
+// JWT検証ミドルウェア
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
-  if (!token) return res.sendStatus(401);
+  if (!token) return res.sendStatus(401); // トークンがない場合は未認証ステータスを返す
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decodedToken) => {
+    if (err) return res.sendStatus(403); // トークンが無効な場合は拒否ステータスを返す
+
+    try {
+      // トークンの情報を使ってユーザーをデータベースから取得
+      const user = await User.findById(decodedToken.userId);
+      if (!user) return res.sendStatus(404); // ユーザーが見つからない場合は404ステータスを返す
+
+      // リクエストにユーザー情報を追加
+      req.user = {
+        userId: user._id.toString(),
+        name: user.username, // ユーザー名をリクエストに追加
+      };
+      next(); // 次のミドルウェアまたはルートハンドラに進む
+    } catch (err) {
+      res.sendStatus(500); // サーバーエラーの場合は500ステータスを返す
+    }
   });
 }
 
