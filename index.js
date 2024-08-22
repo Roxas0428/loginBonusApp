@@ -17,7 +17,7 @@ const app = express();
 
 // ミドルウェアの設定
 app.use(express.json());
-app.use('/auth', authRoutes); // 認証ルートを適用
+app.use("/auth", authRoutes); // 認証ルートを適用
 app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -42,8 +42,6 @@ function authenticateToken(req, res, next) {
     req.user = user;
     next();
   });
-  
-  
 }
 
 // ホームページリダイレクトルート
@@ -65,18 +63,20 @@ app.get("/api/user-info", authenticateToken, async (req, res) => {
     if (!user)
       return res.status(404).json({ message: "ユーザーが見つかりません" });
 
-    // console.log("Before update:", {
-    //   lastLogin: user.lastLogin,
-    //   previousLogin: user.previousLogin,
-    //   consecutiveLoginDays: user.consecutiveLoginDays,
-    // });
-
     const now = new Date();
     const lastLoginDate = user.lastLogin ? new Date(user.lastLogin) : null;
 
-    // 最後のログインから24時間以上経過している場合のみ更新
-    if (!lastLoginDate || now - lastLoginDate >= 24 * 60 * 60 * 1000) {
-      // 連続ログイン日数の更新
+    // 日付の比較（時間を無視）
+    const isSameDay = (date1, date2) => {
+      return (
+        date1.getFullYear() === date2.getFullYear() &&
+        date1.getMonth() === date2.getMonth() &&
+        date1.getDate() === date2.getDate()
+      );
+    };
+
+    // 最後のログインが前日以前の場合のみ更新
+    if (!lastLoginDate || !isSameDay(now, lastLoginDate)) {
       if (lastLoginDate) {
         const daysDifference = Math.floor(
           (now - lastLoginDate) / (1000 * 60 * 60 * 24)
@@ -90,17 +90,17 @@ app.get("/api/user-info", authenticateToken, async (req, res) => {
         user.consecutiveLoginDays = 1;
       }
 
-      // 前回のログイン時間を保存し、現在のログイン時間を更新
       user.previousLogin = user.lastLogin;
       user.lastLogin = now;
 
-      await user.save();
-
-      // console.log("After update:", {
-      //   lastLogin: user.lastLogin,
-      //   previousLogin: user.previousLogin,
-      //   consecutiveLoginDays: user.consecutiveLoginDays,
-      // });
+      try {
+        await user.save();
+      } catch (saveErr) {
+        console.error("User save error:", saveErr);
+        return res
+          .status(500)
+          .json({ message: "ユーザー情報の更新に失敗しました。" });
+      }
     }
 
     res.json({
@@ -185,17 +185,20 @@ app.post("/api/claim-bonus", authenticateToken, async (req, res) => {
 });
 
 // コメント機能用のスキーマとルート
-const commentSchema = new mongoose.Schema({
-  text: String,
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  username: String // ユーザー名を保存
-}, { timestamps: true });
+const commentSchema = new mongoose.Schema(
+  {
+    text: String,
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    username: String, // ユーザー名を保存
+  },
+  { timestamps: true }
+);
 
 const Comment = mongoose.model("Comment", commentSchema);
 
 // コメント取得ルート
 // コメント取得ルート
-app.get('/comments', async (req, res) => {
+app.get("/comments", async (req, res) => {
   try {
     const comments = await Comment.find().sort({ createdAt: -1 });
     res.json(comments);
@@ -206,7 +209,7 @@ app.get('/comments', async (req, res) => {
 });
 
 // コメント追加ルート
-app.post('/comments', authenticateToken, async (req, res) => {
+app.post("/comments", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     if (!user) {
@@ -216,9 +219,9 @@ app.post('/comments', authenticateToken, async (req, res) => {
     const newComment = new Comment({
       user: user._id,
       username: user.username,
-      text: req.body.comment
+      text: req.body.comment,
     });
-    
+
     await newComment.save();
     res.status(201).json(newComment);
   } catch (err) {
@@ -228,15 +231,20 @@ app.post('/comments', authenticateToken, async (req, res) => {
 });
 
 // コメント編集ルート
-app.put('/comments/:id', authenticateToken, async (req, res) => {
+app.put("/comments/:id", authenticateToken, async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
     if (!comment) {
       return res.status(404).json({ message: "コメントが見つかりません" });
     }
 
-    if (comment.user.toString() !== req.user.userId && req.user.username !== "鈴木大地") {
-      return res.status(403).json({ message: "このコメントを編集する権限がありません" });
+    if (
+      comment.user.toString() !== req.user.userId &&
+      req.user.username !== "鈴木大地"
+    ) {
+      return res
+        .status(403)
+        .json({ message: "このコメントを編集する権限がありません" });
     }
 
     comment.text = req.body.comment;
@@ -249,7 +257,7 @@ app.put('/comments/:id', authenticateToken, async (req, res) => {
 });
 
 // コメント削除ルート
-app.delete('/comments/:id', authenticateToken, async (req, res) => {
+app.delete("/comments/:id", authenticateToken, async (req, res) => {
   try {
     const comment = await Comment.findById(req.params.id);
     if (!comment) {
@@ -257,8 +265,13 @@ app.delete('/comments/:id', authenticateToken, async (req, res) => {
     }
 
     // コメントの所有者とログインユーザーのIDを比較
-    if (comment.user.toString() !== req.user.userId && req.user.username !== "鈴木大地") {
-      return res.status(403).json({ message: "このコメントを削除する権限がありません" });
+    if (
+      comment.user.toString() !== req.user.userId &&
+      req.user.username !== "鈴木大地"
+    ) {
+      return res
+        .status(403)
+        .json({ message: "このコメントを削除する権限がありません" });
     }
 
     await comment.deleteOne();
@@ -268,7 +281,6 @@ app.delete('/comments/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ message: "サーバーエラーが発生しました。" });
   }
 });
-
 
 // サーバー起動
 const PORT = process.env.PORT || 3000;
